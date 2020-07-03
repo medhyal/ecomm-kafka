@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecomm-debezium-source
+spec:
+  selector:
+    matchLabels:
+      app: ecomm-debezium-source
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ecomm-debezium-source
+    spec:
+      containers:
+      - name: ecomm-debezium-source
+        image: debezium/connect:1.2
+        env:
+        - name: BOOTSTRAP_SERVERS
+          value: kafka:9092
+        - name: GROUP_ID
+          value: "ecomm-debezium-source"
+        - name: CONFIG_STORAGE_TOPIC
+          value: ecomm-source-config
+        - name: OFFSET_STORAGE_TOPIC
+          value: ecomm-source-offset
+        - name: LOG_LEVEL
+          value: DEBUG
+        ports:
+        - containerPort: 8083
+          name: ecomm-source
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: ecomm-debezium-source
+  labels:
+    app: ecomm-debezium-source
+spec:
+  ports:
+  - port: 8083
+    targetPort: 8083
+    name: ecomm-debezium-source
+    nodePort: 30001
+  type: NodePort
+  selector:
+    app: ecomm-debezium-source
